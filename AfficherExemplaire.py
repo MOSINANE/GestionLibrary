@@ -1,0 +1,65 @@
+from tkinter import *
+from subprocess import call
+import mysql.connector
+from tkinter import  ttk
+from tkinter import messagebox
+root = Tk()
+root.title("Afficher Exemplaire")
+root.geometry('1000x400')
+
+labelAff = Label(root,text="Ref Exemplaire")
+labelAff.pack()
+inputAff = Entry(root,width=50,borderwidth=5)
+inputAff.pack()
+
+db = mysql.connector.connect(host="localhost", user="root", password="", db="biblio")
+mycursor = db.cursor()
+mycursor.execute("SELECT * FROM exemplaire")
+
+# Using treeview widget
+trv = ttk.Treeview(root, selectmode='browse')
+#trv.grid(row=1, column=1, padx=20, pady=20)
+trv.pack()
+# number of columns
+trv["columns"] = ("1", "2")
+# Defining heading
+trv['show'] = 'headings'
+# width of columns and alignment
+trv.column("1", width=50, anchor='c')
+trv.column("2", width=100, anchor='c')
+
+
+# Headings
+# respective columns
+trv.heading("1", text="referance_E")
+trv.heading("2", text="Id_Livre")
+
+
+r_set = mycursor.fetchall()
+# getting data from MySQL student table
+if r_set is None:
+    messagebox.showerror("error","error")
+else:
+    for dt in r_set:
+        trv.insert(parent="", index='end', iid=dt[0], text=dt[0],
+                   values=(dt[0], dt[1]))
+
+def rech_id():
+    id = inputAff.get()
+    cr = db.cursor()
+    cr.execute("SELECT * FROM exemplaire where referance_E=%s",(id,))
+    data= cr.fetchall()
+    for i in trv.get_children():
+        trv.delete(i)
+    for dt in data:
+        trv.insert(parent="", index='end', iid=dt[0], text=dt[0],
+                   values=(dt[0], dt[1]))
+ButtonAff = Button(root,text="Rechercher",command=rech_id)
+ButtonAff.pack()
+def back():
+    root.destroy()
+    call(["python","menu.py"])
+
+buttonBack = Button(root,text="Back",command=back)
+buttonBack.pack()
+root.mainloop()
